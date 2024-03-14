@@ -1,26 +1,23 @@
-defmodule MakeCoffeeApp do
-   use GenStateMachine, callback_mode: [:handle_event_function, :state_enter]
+defmodule MakeCoffeeState do
+  use GenStateMachine, callback_mode: [:handle_event_function, :state_enter, :state_functions]
 
    import MakeCoffeeStateData
 
    # Start the server
-   def initialize() do
-      state_data = make_coffee_state_data()
-     GenStateMachine.start_link(MakeCoffeeApp, {:get_some_water, state_data})
-
+   def start_link({initial_state, state_data}) do
+      GenStateMachine.start_link(MakeCoffeeState, {initial_state, state_data}, name: __MODULE__)
    end
 
    # State functions
 
    def get_some_water(:enter, state, state_data) do
      IO.inspect(state, label: "state")
-     Process.send(self(), :got_some_water, [])
 
      {:next_state, :get_some_water,
       MakeCoffeeStateData.make_coffee_state_data(state_data, water: :we_got_some_water)}
    end
 
-   def get_some_water(:info, :got_some_water, state_data) do
+   def get_some_water(:cast, :got_some_water, state_data) do
      IO.inspect("got some water, let's wait for it to boil")
 
      {:next_state, :let_it_boil,
@@ -83,6 +80,7 @@ defmodule MakeCoffeeApp do
    def handle_event(:enter, event, state, state_data) do
      IO.inspect(event, label: "eventttt")
      IO.inspect(state, label: "stateee")
+     IO.inspect(state_data, label: "state_data")
      {:next_state, state, state_data}
    end
 

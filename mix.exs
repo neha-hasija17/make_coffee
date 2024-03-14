@@ -14,7 +14,7 @@ defmodule MakeCoffee.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {MakeCoffee, []},
+      mod: {MakeCoffee.Application, []},
       extra_applications:
       [:gen_state_machine]
 
