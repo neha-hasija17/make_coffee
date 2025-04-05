@@ -1,14 +1,37 @@
 defmodule MakeCoffee.Application do
+  # See https://hexdocs.pm/elixir/Application.html
+  # for more information on OTP Applications
+  @moduledoc false
 
   use Application
 
-  @impl Application
+  @impl true
   def start(_type, _args) do
-    children =
-      [
-        MakeCoffeeSup
-      ]
-    opts = [strategy: :one_for_one]
+    children = [
+      MakeCoffeeWeb.Telemetry,
+      MakeCoffee.Repo,
+      MakeCoffeeSup,
+      {DNSCluster, query: Application.get_env(:make_coffee, :dns_cluster_query) || :ignore},
+      {Phoenix.PubSub, name: MakeCoffee.PubSub},
+      # Start the Finch HTTP client for sending emails
+      {Finch, name: MakeCoffee.Finch},
+      # Start a worker by calling: MakeCoffee.Worker.start_link(arg)
+      # {MakeCoffee.Worker, arg},
+      # Start to serve requests, typically the last entry
+      MakeCoffeeWeb.Endpoint
+    ]
+
+    # See https://hexdocs.pm/elixir/Supervisor.html
+    # for other strategies and supported options
+    opts = [strategy: :one_for_one, name: MakeCoffee.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # Tell Phoenix to update the endpoint configuration
+  # whenever the application is updated.
+  @impl true
+  def config_change(changed, _new, removed) do
+    MakeCoffeeWeb.Endpoint.config_change(changed, removed)
+    :ok
   end
 end
